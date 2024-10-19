@@ -8,7 +8,7 @@ use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
 use std::vec::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 struct Node<T> {
     val: T,
     next: Option<NonNull<Node<T>>>,
@@ -29,13 +29,13 @@ struct LinkedList<T> {
     end: Option<NonNull<Node<T>>>,
 }
 
-impl<T> Default for LinkedList<T> {
+impl<T: Clone + std::cmp::PartialOrd> Default for LinkedList<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T> LinkedList<T> {
+impl<T: Clone + std::cmp::PartialOrd> LinkedList<T> {
     pub fn new() -> Self {
         Self {
             length: 0,
@@ -72,11 +72,36 @@ impl<T> LinkedList<T> {
 	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
 	{
 		//TODO
-		Self {
+        let mut ret = Self {
             length: 0,
             start: None,
-            end: None,
+            end: None
+        };
+        let mut node1 = list_a.start;
+        let mut node2 = list_b.start;
+        loop {
+            if node1.is_none() && node2.is_none() {
+                break;
+            }
+            else if node1.is_some() && node2.is_none() {
+                ret.add(unsafe { (*node1.unwrap().as_ptr()).val.clone() });
+                unsafe { node1 = (*node1.unwrap().as_ptr()).next; }
+            }
+            else if node1.is_none() && node2.is_some() {
+                ret.add(unsafe { (*node2.unwrap().as_ptr()).val.clone() });
+                unsafe { node2 = (*node2.unwrap().as_ptr()).next; }
+            }
+            else if node1.is_some() && node2.is_some() {
+                if unsafe {(*node1.unwrap().as_ptr()).clone()} < unsafe{(*node2.unwrap().as_ptr()).clone()} {
+                    ret.add(unsafe { (*node1.unwrap().as_ptr()).val.clone() });
+                    unsafe { node1 = (*node1.unwrap().as_ptr()).next; }
+                } else {
+                    ret.add(unsafe { (*node2.unwrap().as_ptr()).val.clone() });
+                    unsafe { node2 = (*node2.unwrap().as_ptr()).next; }
+                }
+            }
         }
+        ret
 	}
 }
 
