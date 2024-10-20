@@ -2,7 +2,7 @@
 	heap
 	This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
+
 
 use std::cmp::Ord;
 use std::default::Default;
@@ -37,7 +37,18 @@ where
     }
 
     pub fn add(&mut self, value: T) {
-        //TODO
+        self.count += 1;
+        self.items.push(value);
+        let mut x = self.count;
+        while x != 1 {
+            let f = self.parent_idx(x);
+            if (self.comparator)(&self.items[f], &self.items[x]) == false {
+                self.items.swap(f, x);
+                x = f;
+            } else {
+                break;
+            }
+        }
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
@@ -58,7 +69,7 @@ where
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
         //TODO
-		0
+        todo!()
     }
 }
 
@@ -84,8 +95,42 @@ where
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        //TODO
-		None
+        if self.count == 0 {
+            None
+        } else {
+            let midx = self.count;
+            self.items.swap(1, midx);
+            let ret = self.items.pop();
+            self.count -= 1;
+            if self.count > 0 {
+                let mut p = 1;
+                while self.left_child_idx(p) <= self.count {
+                    let lc = self.left_child_idx(p);
+                    let rc = self.right_child_idx(p);
+                    if rc >= self.count {
+                        if (self.comparator)(&self.items[p], &self.items[lc]) == false {
+                            self.items.swap(p, lc);
+                            p = lc;
+                        } else {
+                            break;
+                        }
+                    } else {
+                        if (self.comparator)(&self.items[p], &self.items[lc]) == false || (self.comparator)(&self.items[p], &self.items[rc]) == false {
+                            if (self.comparator)(&self.items[lc], &self.items[rc]) == false {
+                                self.items.swap(p, rc);
+                                p = rc;
+                            } else {
+                                self.items.swap(p, lc);
+                                p = lc;
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+            ret
+        }
     }
 }
 
@@ -95,7 +140,7 @@ impl MinHeap {
     #[allow(clippy::new_ret_no_self)]
     pub fn new<T>() -> Heap<T>
     where
-        T: Default + Ord,
+        T: Default + Ord+std::fmt::Display,
     {
         Heap::new(|a, b| a < b)
     }
